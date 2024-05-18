@@ -3,12 +3,13 @@ import './style.css';
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
-// Variables to keep track of drawing state
 let isDrawing: boolean = false;
-
+let isErasing: boolean = false;
 let lastX: number = 0;
 let lastY: number = 0;
-let paths: { points: { x: number; y: number }[] }[] = [];
+let paths: {
+  points: { x: number; y: number; propery?: { color?: string } }[];
+}[] = [];
 
 function resizeCanvas(): void {
   canvas.width = window.innerWidth;
@@ -24,7 +25,17 @@ function startDrawing(event: MouseEvent): void {
   isDrawing = true;
   lastX = event.offsetX;
   lastY = event.offsetY;
-  paths.push({ points: [{ x: lastX, y: lastY }] });
+  paths.push({
+    points: [
+      {
+        x: lastX,
+        y: lastY,
+        propery: {
+          color: isErasing ? 'black' : 'white',
+        },
+      },
+    ],
+  });
 }
 
 function drawLine(event: MouseEvent): void {
@@ -33,9 +44,15 @@ function drawLine(event: MouseEvent): void {
   const currentX = event.offsetX;
   const currentY = event.offsetY;
 
-  paths[paths.length - 1].points.push({ x: currentX, y: currentY });
+  paths[paths.length - 1].points.push({
+    x: currentX,
+    y: currentY,
+    propery: {
+      color: isErasing ? 'black' : 'white',
+    },
+  });
 
-  ctx.strokeStyle = 'white';
+  ctx.strokeStyle = isErasing ? 'black' : 'white';
   ctx.lineWidth = 5;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
@@ -54,7 +71,6 @@ function drawLine(event: MouseEvent): void {
 function redrawPaths(): void {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   paths.forEach(path => {
-    ctx.strokeStyle = 'white';
     ctx.lineWidth = 5;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -62,6 +78,7 @@ function redrawPaths(): void {
     ctx.beginPath();
     ctx.moveTo(path.points[0].x, path.points[0].y);
     path.points.slice(1).forEach(point => {
+      ctx.strokeStyle = point?.propery?.color || 'white';
       ctx.lineTo(point.x, point.y);
     });
     ctx.stroke();
