@@ -16,6 +16,7 @@ type Path = {
 
 let isDrawing: boolean = false;
 let isErasing: boolean = false;
+let hasMoved: boolean = false;
 
 let lastX: number = 0;
 let lastY: number = 0;
@@ -34,11 +35,12 @@ function resizeCanvas(): void {
 
 function stopDrawing(): void {
   if (!isDrawing) return;
+  isDrawing = false;
 
-  const width = lastX - firstX;
-  const height = lastY - firstY;
+  if (drawingType === 'square' && hasMoved) {
+    const width = lastX - firstX;
+    const height = lastY - firstY;
 
-  if (drawingType === 'square') {
     paths.push({
       type: 'square',
       points: [
@@ -57,11 +59,12 @@ function stopDrawing(): void {
     redraw();
   }
 
-  isDrawing = false;
+  hasMoved = false;
 }
 
 function startDraw(event: MouseEvent): void {
   isDrawing = true;
+  hasMoved = false;
   lastX = event.offsetX;
   lastY = event.offsetY;
   firstX = event.offsetX;
@@ -89,6 +92,10 @@ function drawing(event: MouseEvent): void {
   const currentX = event.offsetX;
   const currentY = event.offsetY;
 
+  hasMoved = true;
+
+  redraw();
+
   if (drawingType === 'line') {
     paths[paths.length - 1].points.push({
       x: currentX,
@@ -108,7 +115,6 @@ function drawing(event: MouseEvent): void {
   }
 
   if (drawingType === 'square') {
-    redraw();
     ctx.strokeStyle = 'gray';
     ctx.strokeRect(firstX, firstY, lastX - firstX, lastY - firstY);
   }
